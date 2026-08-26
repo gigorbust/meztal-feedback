@@ -35,7 +35,7 @@
     var W = innerWidth, s = commenting || sideOpen() ? (W - SIDEW) / W : 1;
     document.body.style.transformOrigin = 'top left';
     document.body.style.transform = s < 1 ? 'scale(' + s + ')' : '';
-    document.body.style.width = s < 1 ? (100 / s) + 'vw' : '';
+    document.body.style.width = s < 1 ? '100vw' : '';
   }
 
   // --- styles ---
