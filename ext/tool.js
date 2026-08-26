@@ -32,7 +32,7 @@
 
   // --- push the site left by scaling <body>; our UI lives on <html>, unscaled ---
   function scaleSite() {
-    var W = innerWidth, s = commenting || sideOpen() ? (W - SIDEW) / W : 1;
+    var W = innerWidth, s = commenting ? (W - SIDEW) / W : 1;
     document.body.style.transformOrigin = 'top left';
     document.body.style.transform = s < 1 ? 'scale(' + s + ')' : '';
     document.body.style.width = s < 1 ? '100vw' : '';
@@ -81,8 +81,14 @@
     else if (b.dataset.a === 'off') { destroy(); }
   });
   function syncBar() {
-    bar.querySelector('[data-a="comment"]').classList.toggle('on', commenting);
-    root.style.cursor = commenting ? 'crosshair' : '';
+    var on = commenting;
+    var cb = bar.querySelector('[data-a="comment"]');
+    cb.classList.toggle('on', on);
+    cb.textContent = on ? '✎ Marking — click to browse site' : '✎ Comment';
+    side.style.display = on ? 'block' : 'none';   // sidebar only in marking mode
+    layer.style.display = on ? 'block' : 'none';  // markers hidden while browsing (no click interference)
+    bar.style.right = (on ? SIDEW + 12 : 12) + 'px';
+    root.style.cursor = on ? 'crosshair' : '';
   }
 
   // --- capture clicks/drags only while commenting ---
@@ -192,7 +198,11 @@
       ta.addEventListener('input', function () { n.text = ta.value; save(); }); // auto-save every keystroke — crash-proof
       bub.querySelector('.mzfb-save').onclick = function () { n.text = ta.value.trim(); save(); render(); closeBubble(); };
       bub.querySelector('.mzfb-del').onclick = function () { del(id); closeBubble(); };
-    } else { bub.textContent = n.text; bub.addEventListener('dblclick', function () { openBubble(id, true); }); }
+    } else {
+      bub.innerHTML = '<div>' + esc(n.text) + '</div><div class="r"><button class="mzfb-del">Delete</button><button class="mzfb-save">Edit</button></div>';
+      bub.querySelector('.mzfb-del').onclick = function () { del(id); closeBubble(); };
+      bub.querySelector('.mzfb-save').onclick = function () { openBubble(id, true); };
+    }
     root.appendChild(bub);
   }
   function closeBubble() { if (bub) { bub.remove(); bub = null; } }
@@ -226,6 +236,6 @@
   }
 
   document.documentElement.classList.add('mzfb-on');
-  window.__mzfb = { toggle: function () { side.style.display = sideOpen() ? 'none' : 'block'; scaleSite(); }, destroy: destroy };
-  syncBar(); scaleSite(); render(); flash('Feedback on — hit ✎ Comment');
+  window.__mzfb = { toggle: function () { commenting = !commenting; syncBar(); scaleSite(); render(); }, destroy: destroy };
+  syncBar(); scaleSite(); render(); flash('Hit ✎ Comment to start marking');
 })();
