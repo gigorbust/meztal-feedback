@@ -1,0 +1,9 @@
+{
+  "manifest_version": 3,
+  "name": "MezTal Feedback",
+  "version": "1.0",
+  "description": "Point-and-comment feedback tool for the MezTal site (internal).",
+  "action": { "default_title": "MezTal Feedback — click to toggle on this page" },
+  "permissions": ["scripting", "activeTab"],
+  "background": { "service_worker": "bg.js" }
+}
