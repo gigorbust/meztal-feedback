@@ -77,10 +77,14 @@
   var layer = document.createElement('div'); // markers live here
   document.body.appendChild(layer);
 
+  var SIDEW = '300px';
+  document.documentElement.style.transition = 'margin-right .15s ease';
+  function pushPage() { document.documentElement.style.marginRight = (side.style.display === 'none') ? '' : SIDEW; }
+
   bar.addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     if (b.dataset.m) { mode = (mode === b.dataset.m) ? null : b.dataset.m; syncBar(); }
-    else if (b.dataset.a === 'side') { side.style.display = side.style.display === 'none' ? 'block' : 'none'; }
+    else if (b.dataset.a === 'side') { side.style.display = side.style.display === 'none' ? 'block' : 'none'; pushPage(); }
     else if (b.dataset.a === 'export') { exportMd(); }
     else if (b.dataset.a === 'off') { destroy(); }
   });
@@ -220,10 +224,12 @@
     document.removeEventListener('mousedown', onDown, true);
     window.removeEventListener('resize', render);
     document.body.style.cursor = '';
+    document.documentElement.style.marginRight = '';
     window.__mzfb = null;
   }
 
-  window.__mzfb = { toggle: function () { var s = side.style.display === 'none'; side.style.display = s ? 'block' : 'none'; }, destroy: destroy };
+  window.__mzfb = { toggle: function () { side.style.display = side.style.display === 'none' ? 'block' : 'none'; pushPage(); }, destroy: destroy };
   render();
+  pushPage();
   flash('Feedback tool on — pick Point or Box');
 })();
