@@ -1,0 +1,35 @@
+<!doctype html><html><head><meta charset="utf-8"><title>MezTal Feedback — Setup</title>
+<style>
+body{font:15px/1.6 system-ui;background:#0b1220;color:#e5e7eb;margin:0;padding:28px;max-width:560px}
+h1{font-size:20px;margin:0 0 4px}.sub{color:#93a3b8;margin:0 0 20px}
+label{display:block;font-weight:700;font-size:13px;margin:16px 0 5px}
+input{width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #1f2937;background:#111827;color:#fff;font:14px system-ui}
+button{margin-top:18px;background:#f7903c;color:#111827;font-weight:800;border:0;border-radius:9px;padding:11px 20px;font-size:15px;cursor:pointer}
+.ok{color:#4ade80;font-weight:700;margin-left:10px}
+.card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:18px;margin-top:16px}
+code{background:#1f2937;padding:2px 6px;border-radius:5px;font:13px monospace}
+a{color:#f7903c}ol{padding-left:20px}li{margin:7px 0}
+</style></head><body>
+<h1>MezTal Feedback — Setup</h1>
+<p class="sub">Connect the private backup repo so notes are saved to the cloud (not just this browser).</p>
+
+<label>Data repo <span style="font-weight:400;color:#64748b">(owner/repo)</span></label>
+<input id="repo" value="gigorbust/meztal-feedback-data" placeholder="gigorbust/meztal-feedback-data">
+
+<label>GitHub access token</label>
+<input id="token" type="password" placeholder="github_pat_...">
+
+<button id="save">Save</button><span id="ok" class="ok"></span>
+
+<div class="card">
+<b>How to make the token (2 min, one-time):</b>
+<ol>
+<li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank">github.com/settings/personal-access-tokens/new</a> (fine-grained token)</li>
+<li><b>Resource owner:</b> gigorbust &nbsp;·&nbsp; <b>Repository access:</b> Only select repositories &rarr; <code>meztal-feedback-data</code></li>
+<li><b>Permissions:</b> Repository permissions &rarr; <b>Contents</b> = <b>Read and write</b></li>
+<li>Generate, copy the <code>github_pat_…</code> value, paste it above, click Save.</li>
+</ol>
+<p style="color:#64748b;margin:6px 0 0">The token is stored only in this browser (chrome.storage) and used only to write to that one private repo.</p>
+</div>
+
+<script src="options.js"></script></body></html>

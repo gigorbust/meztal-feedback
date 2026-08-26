@@ -8,7 +8,44 @@
   var data = load(), commenting = false, dragStart = null, ghost = null, raf = 0;
 
   function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} }
+  function saveLocal() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} }
+  function save() { saveLocal(); scheduleBackup(); }
+
+  // --- cloud backup via extension background (GitHub repo). Degrades to local-only if no extension. ---
+  var hasBg = (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id);
+  var backupT = 0;
+  function scheduleBackup() { if (!hasBg) return; clearTimeout(backupT); setStatus('saving'); backupT = setTimeout(sendBackup, 1500); }
+  function sendBackup() {
+    chrome.runtime.sendMessage({ type: 'backup', data: data }, function (res) {
+      if (chrome.runtime.lastError) { setStatus('error'); return; }
+      setStatus(res && res.ok ? 'synced' : (res && res.configured === false ? 'notoken' : 'error'));
+    });
+  }
+  function mergeCloud(cloud) {
+    if (!cloud) return;
+    Object.keys(cloud).forEach(function (p) {
+      var byId = {}; (data[p] || []).forEach(function (n) { byId[n.id] = n; });
+      cloud[p].forEach(function (cn) { var e = byId[cn.id]; if (!e || (cn.ts || 0) >= (e.ts || 0)) byId[cn.id] = cn; });
+      data[p] = Object.keys(byId).map(function (k) { return byId[k]; });
+    });
+  }
+  function restoreCloud(cb) {
+    if (!hasBg) { cb(); return; }
+    setStatus('loading');
+    chrome.runtime.sendMessage({ type: 'restore' }, function (res) {
+      if (chrome.runtime.lastError) { setStatus('error'); cb(); return; }
+      if (res && res.ok && res.data) { mergeCloud(res.data); saveLocal(); }
+      setStatus(res && res.ok ? (res.configured ? 'synced' : 'notoken') : 'error');
+      cb();
+    });
+  }
+  function setStatus(s) {
+    var el = document.getElementById('mzfb-sync'); if (!el) return;
+    var map = { saving: ['☁ saving…', '#93a3b8'], synced: ['☁ synced', '#4ade80'], loading: ['☁ loading…', '#93a3b8'], error: ['☁ sync error', '#f87171'], notoken: ['⚙ set token', C] };
+    var m = map[s] || ['', '#93a3b8']; el.textContent = m[0]; el.style.color = m[1];
+    el.style.cursor = s === 'notoken' ? 'pointer' : 'default';
+    el.onclick = s === 'notoken' && hasBg ? function () { chrome.runtime.sendMessage({ type: 'options' }); } : null;
+  }
   function path() { return location.pathname || '/'; }
   function notes() { return data[path()] || (data[path()] = []); }
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
@@ -68,7 +105,7 @@
   // --- UI (all on <html>, so it is NOT scaled with the site) ---
   var root = document.documentElement;
   var bar = document.createElement('div'); bar.id = 'mzfb-bar';
-  bar.innerHTML = '<button data-a="comment">✎ Comment</button><button data-a="export">⤓ Export</button><button data-a="off">✕</button>';
+  bar.innerHTML = '<button data-a="comment">✎ Comment</button><span id="mzfb-sync" style="align-self:center;font:600 11px system-ui;padding:0 8px;white-space:nowrap"></span><button data-a="export">⤓ Export</button><button data-a="off">✕</button>';
   root.appendChild(bar);
   var side = document.createElement('div'); side.id = 'mzfb-side'; root.appendChild(side);
   var layer = document.createElement('div'); layer.style.cssText = 'position:fixed;inset:0;z-index:2147483000;pointer-events:none'; root.appendChild(layer);
@@ -237,5 +274,7 @@
 
   document.documentElement.classList.add('mzfb-on');
   window.__mzfb = { toggle: function () { commenting = !commenting; syncBar(); scaleSite(); render(); }, destroy: destroy };
-  syncBar(); scaleSite(); render(); flash('Hit ✎ Comment to start marking');
+  syncBar(); scaleSite(); render();
+  restoreCloud(function () { render(); });
+  flash('Hit ✎ Comment to start marking');
 })();

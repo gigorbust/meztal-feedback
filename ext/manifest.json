@@ -1,9 +1,11 @@
 {
   "manifest_version": 3,
   "name": "MezTal Feedback",
-  "version": "1.0",
-  "description": "Point-and-comment feedback tool for the MezTal site (internal).",
+  "version": "1.4",
+  "description": "Point-and-comment feedback on the MezTal site (internal). Auto-backs up to a private GitHub repo.",
   "action": { "default_title": "MezTal Feedback — click to toggle on this page" },
-  "permissions": ["scripting", "activeTab"],
-  "background": { "service_worker": "bg.js" }
+  "permissions": ["scripting", "activeTab", "storage"],
+  "host_permissions": ["https://api.github.com/*"],
+  "background": { "service_worker": "bg.js" },
+  "options_page": "options.html"
 }
