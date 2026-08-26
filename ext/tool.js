@@ -105,7 +105,7 @@
   // --- UI (all on <html>, so it is NOT scaled with the site) ---
   var root = document.documentElement;
   var bar = document.createElement('div'); bar.id = 'mzfb-bar';
-  bar.innerHTML = '<button data-a="comment">✎ Comment</button><span id="mzfb-sync" style="align-self:center;font:600 11px system-ui;padding:0 8px;white-space:nowrap"></span><button data-a="export">⤓ Export</button><button data-a="off">✕</button>';
+  bar.innerHTML = '<button data-a="comment">✎ Comment</button><span id="mzfb-sync" style="align-self:center;font:600 11px system-ui;padding:0 8px;white-space:nowrap"></span><button data-a="restore" title="Pull latest notes from the cloud">⟳</button><button data-a="export">⤓ Export</button><button data-a="off">✕</button>';
   root.appendChild(bar);
   var side = document.createElement('div'); side.id = 'mzfb-side'; root.appendChild(side);
   var layer = document.createElement('div'); layer.style.cssText = 'position:fixed;inset:0;z-index:2147483000;pointer-events:none'; root.appendChild(layer);
@@ -114,6 +114,7 @@
   bar.addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     if (b.dataset.a === 'comment') { commenting = !commenting; syncBar(); scaleSite(); render(); }
+    else if (b.dataset.a === 'restore') { restoreCloud(function () { render(); flash('Restored from cloud ✓'); }); }
     else if (b.dataset.a === 'export') { exportMd(); }
     else if (b.dataset.a === 'off') { destroy(); }
   });
