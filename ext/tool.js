@@ -150,12 +150,26 @@
   // --- capture clicks/drags only while marking is on ---
   document.addEventListener('mousedown', onDown, true);
   function onDown(e) {
+    // an open bubble always eats the next click: dismiss it (delete if untouched), never also start a new marker
+    if (bub) {
+      if (!e.target.closest('.mzfb-bub')) { e.preventDefault(); e.stopPropagation(); dismissBubbleIfEmpty(); }
+      return;
+    }
     if (!commenting) return;
     if (e.target.closest('#mzfb-side,.mzfb-bub,.mzfb-mk')) return;
     e.preventDefault(); e.stopPropagation();
     dragStart = { x: e.clientX, y: e.clientY };
     document.addEventListener('mousemove', onMove, true);
     document.addEventListener('mouseup', onUp, true);
+  }
+  function dismissBubbleIfEmpty() {
+    if (!bub) return;
+    var id = bub.dataset.noteId;
+    var n = notes().find(function (x) { return x.id === id; });
+    var ta = bub.querySelector('textarea');
+    var textNow = (ta ? ta.value : (n ? n.text : '')).trim();
+    closeBubble();
+    if (n && !textNow) del(id); // only cancel if nothing was typed; otherwise just close
   }
   function onMove(e) {
     var x = Math.min(e.clientX, dragStart.x), y = Math.min(e.clientY, dragStart.y),
@@ -205,6 +219,8 @@
       m.style.left = p.left + 'px'; m.style.top = p.top + 'px';
       if (n.type === 'box') { m.style.width = p.w + 'px'; m.style.height = p.h + 'px'; }
       m.addEventListener('click', function (e) { e.stopPropagation(); openBubble(n.id); });
+      m.addEventListener('mouseenter', function () { highlightPair(n.id, true); });
+      m.addEventListener('mouseleave', function () { highlightPair(n.id, false); });
       layer.appendChild(m);
     });
     renderList();
@@ -232,7 +248,15 @@
         if (e.target === t) { t.classList.toggle('clip'); return; }
         if (li.dataset.p === cur) jumpTo(li.dataset.id); else location.assign(li.dataset.p);
       });
+      li.addEventListener('mouseenter', function () { highlightPair(li.dataset.id, true); });
+      li.addEventListener('mouseleave', function () { highlightPair(li.dataset.id, false); });
     });
+  }
+  function highlightPair(id, on) {
+    var m = layer.querySelector('.mzfb-mk[data-id="' + id + '"]');
+    var li = list.querySelector('.mzfb-li[data-id="' + id + '"]');
+    if (m) m.classList.toggle('mzfb-hl', on);
+    if (li) li.classList.toggle('mzfb-hl', on);
   }
   function jumpTo(id) {
     var n = notes().find(function (x) { return x.id === id; }); if (!n) return;
@@ -249,7 +273,7 @@
   function openBubble(id, edit) {
     closeBubble();
     var n = notes().find(function (x) { return x.id === id; }); if (!n) return;
-    var p = posOf(n); bub = document.createElement('div'); bub.className = 'mzfb-bub';
+    var p = posOf(n); bub = document.createElement('div'); bub.className = 'mzfb-bub'; bub.dataset.noteId = id;
     bub.style.left = Math.min(p.left + 14, innerWidth - SIDEW - 280) + 'px'; bub.style.top = (p.top + 14) + 'px';
     if (edit || !n.text) {
       bub.innerHTML = '<textarea placeholder="Feedback...">' + esc(n.text) + '</textarea><div class="r"><button class="mzfb-del">Delete</button><button class="mzfb-save">Save</button></div>';
